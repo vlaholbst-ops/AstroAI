@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from app.schemas.natal_chart import NatalChartRequest, NatalChartResponse
+from fastapi import APIRouter, HTTPException, Query
+from app.schemas.natal_chart import (
+    NatalChartRequest, 
+    NatalChartResponse,
+    NatalChartWithAspectsResponse
+)
 from app.services.astrology_service import get_natal_chart
 
 # Создаём роутер
@@ -9,7 +13,7 @@ router = APIRouter()
 @router.post("/calculate-chart", response_model=NatalChartResponse)
 async def calculate_chart(request: NatalChartRequest):
     """
-    Рассчитать натальную карту по дате, времени и месту рождения.
+    Рассчитать натальную карту (планеты + дома).
     
     Args:
         request: NatalChartRequest с полями birth_date, latitude, longitude
@@ -21,7 +25,34 @@ async def calculate_chart(request: NatalChartRequest):
         chart = get_natal_chart(
             request.birth_date,
             request.latitude,
-            request.longitude
+            request.longitude,
+            include_aspects=False
+        )
+        return chart
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ошибка расчёта натальной карты: {str(e)}"
+        )
+
+
+@router.post("/calculate-chart-full", response_model=NatalChartWithAspectsResponse)
+async def calculate_chart_full(request: NatalChartRequest):
+    """
+    Рассчитать полную натальную карту (планеты + дома + аспекты).
+    
+    Args:
+        request: NatalChartRequest с полями birth_date, latitude, longitude
+    
+    Returns:
+        NatalChartWithAspectsResponse с планетами, домами, ASC, MC и аспектами
+    """
+    try:
+        chart = get_natal_chart(
+            request.birth_date,
+            request.latitude,
+            request.longitude,
+            include_aspects=True
         )
         return chart
     except Exception as e:
@@ -37,5 +68,5 @@ async def astrology_health():
     return {
         "status": "ok",
         "module": "astrology",
-        "features": ["natal_chart", "planets", "houses"]
+        "features": ["natal_chart", "planets", "houses", "aspects"]
     }

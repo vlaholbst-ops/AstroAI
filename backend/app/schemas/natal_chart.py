@@ -96,3 +96,21 @@ class NatalChartResponse(BaseModel):
                 }
             }
         }
+class AspectData(BaseModel):
+    """Аспект между двумя планетами"""
+    planet1: str
+    planet2: str
+    aspect_type: str
+    aspect_symbol: str
+    angle: float
+    exact_angle: int
+    orb: float
+    planet1_position: str
+    planet2_position: str
+
+
+class NatalChartWithAspectsResponse(BaseModel):
+    """Ответ с натальной картой и аспектами"""
+    planets: Dict[str, PlanetPosition]
+    houses: HousesData
+    aspects: List[AspectData]

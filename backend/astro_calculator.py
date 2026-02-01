@@ -169,12 +169,79 @@ def calculate_houses(birth_dt: datetime, lat: float, lon: float, house_system='P
         'houses': houses_list
     }
 
-
-# Тестовый запуск (если файл запущен напрямую)
+def calculate_aspects(chart: dict, orb_conjunction: float = 8.0, orb_major: float = 8.0, orb_minor: float = 6.0) -> list:
+    """
+    Рассчитывает аспекты между планетами.
+    
+    Args:
+        chart: Натальная карта (результат calculate_natal_chart)
+        orb_conjunction: Орбис для соединения (градусы)
+        orb_major: Орбис для мажорных аспектов (оппозиция, тригон)
+        orb_minor: Орбис для минорных аспектов (квадрат, секстиль)
+    
+    Returns:
+        list аспектов: [{planet1, planet2, aspect_type, angle, orb, is_applying}]
+    """
+    aspects = []
+    
+    # Определение типов аспектов и их орбисов
+    aspect_definitions = {
+        'Соединение': {'angle': 0, 'orb': orb_conjunction, 'symbol': '☌'},
+        'Оппозиция': {'angle': 180, 'orb': orb_major, 'symbol': '☍'},
+        'Тригон': {'angle': 120, 'orb': orb_major, 'symbol': '△'},
+        'Квадрат': {'angle': 90, 'orb': orb_minor, 'symbol': '□'},
+        'Секстиль': {'angle': 60, 'orb': orb_minor, 'symbol': '⚹'}
+    }
+    
+    # Получаем список планет
+    planets = list(chart.keys())
+    
+    # Проверяем все пары планет
+    for i in range(len(planets)):
+        for j in range(i + 1, len(planets)):
+            planet1 = planets[i]
+            planet2 = planets[j]
+            
+            # Получаем долготы планет
+            lon1 = chart[planet1]['longitude']
+            lon2 = chart[planet2]['longitude']
+            
+            # Вычисляем угловое расстояние (всегда берём меньший угол)
+            diff = abs(lon1 - lon2)
+            if diff > 180:
+                diff = 360 - diff
+            
+            # Проверяем каждый тип аспекта
+            for aspect_name, aspect_info in aspect_definitions.items():
+                target_angle = aspect_info['angle']
+                allowed_orb = aspect_info['orb']
+                
+                # Вычисляем отклонение от точного аспекта
+                orb = abs(diff - target_angle)
+                
+                # Если попадаем в орбис — аспект найден
+                if orb <= allowed_orb:
+                    aspects.append({
+                        'planet1': chart[planet1]['planet'],
+                        'planet2': chart[planet2]['planet'],
+                        'aspect_type': aspect_name,
+                        'aspect_symbol': aspect_info['symbol'],
+                        'angle': round(diff, 2),
+                        'exact_angle': target_angle,
+                        'orb': round(orb, 2),
+                        'planet1_position': f"{chart[planet1]['degree']:.2f}° {chart[planet1]['zodiac_sign']}",
+                        'planet2_position': f"{chart[planet2]['degree']:.2f}° {chart[planet2]['zodiac_sign']}"
+                    })
+                    break  # Планета может иметь только один аспект с другой планетой
+    
+    # Сортируем аспекты по силе (меньший орбис = сильнее аспект)
+    aspects.sort(key=lambda x: x['orb'])
+    
+    return aspects
 if __name__ == "__main__":
     # Пример: Москва, 1 января 2000, 12:00 UTC
-    test_dt = datetime(1998, 5, 9, 9, 30, tzinfo=timezone.utc)
-    test_lat = 47.225918   # Москва
+    test_dt = datetime(2000, 1, 1, 12, 0, tzinfo=timezone.utc)
+    test_lat = 55.7558  # Москва
     test_lon = 37.6173
     
     print("🌍 Тестовый расчёт натальной карты")
@@ -199,3 +266,17 @@ if __name__ == "__main__":
     
     for house in houses['houses']:
         print(f"Дом {house['house']:2} | {house['zodiac_sign']:12} | {house['degree']:6.2f}°")
+    
+    # Аспекты
+    print("\n" + "="*50 + "\n")
+    print("⚡ АСПЕКТЫ:\n")
+    aspects = calculate_aspects(chart)
+    
+    if aspects:
+        for asp in aspects:
+            print(f"{asp['planet1']:10} {asp['aspect_symbol']} {asp['planet2']:10} | "
+                  f"{asp['aspect_type']:12} | Угол: {asp['angle']:6.2f}° | Орбис: {asp['orb']:5.2f}°")
+    else:
+        print("Аспекты не найдены")
+
+
