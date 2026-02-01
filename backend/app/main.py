@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.db.redis import init_redis, close_redis, get_redis
 from app.routers import test
 from app.db.init_db import create_tables
+from app.routers import astrology_sun
 
 
 @asynccontextmanager
@@ -46,7 +47,7 @@ app = FastAPI(
 # Подключаем роутеры
 app.include_router(test.router)
 app.include_router(astrology_router, prefix="/api/astrology", tags=["Astrology"])
-
+app.include_router(astrology_sun.router)
 
 @app.get("/health")
 async def health_check():
