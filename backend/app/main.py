@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from app.routers.astrology import router as astrology_router
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -44,6 +45,7 @@ app = FastAPI(
 
 # Подключаем роутеры
 app.include_router(test.router)
+app.include_router(astrology_router, prefix="/api/astrology", tags=["Astrology"])
 
 
 @app.get("/health")
