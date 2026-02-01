@@ -7,6 +7,8 @@ from redis.asyncio import Redis
 from app.core.config import settings
 from app.db.session import get_db
 from app.db.redis import init_redis, close_redis, get_redis
+from app.routers import test
+from app.db.init_db import create_tables
 
 
 @asynccontextmanager
@@ -23,6 +25,9 @@ async def lifespan(app: FastAPI):
     # Инициализация Redis
     await init_redis()
     
+    # Создать таблицы БД (для теста)
+    await create_tables()
+    
     yield  # Приложение работает
     
     # Shutdown
@@ -36,6 +41,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+# Подключаем роутеры
+app.include_router(test.router)
 
 
 @app.get("/health")
