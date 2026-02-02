@@ -12,7 +12,7 @@ import swisseph as swe
 
 
 # Константы
-EPHEMERIS_DIR = Path(__file__).parent / "ephemeris"
+EPHEMERIS_DIR = Path(__file__).resolve().parent.parent.parent / "ephemeris"
 ZODIAC_SIGNS = [
     "Овен", "Телец", "Близнецы", "Рак", "Лев", "Дева",
     "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"
@@ -238,6 +238,35 @@ def calculate_aspects(chart: dict, orb_conjunction: float = 8.0, orb_major: floa
     aspects.sort(key=lambda x: x['orb'])
     
     return aspects
+def calculate_sun_position(birth_date: str, birth_time: str, latitude: float, longitude: float) -> dict:
+    """
+    Рассчитывает позицию Солнца (совместимость со старым API).
+    
+    Args:
+        birth_date: 'YYYY-MM-DD' (UTC)
+        birth_time: 'HH:MM:SS' (UTC)
+        latitude: -90..90
+        longitude: -180..180
+        
+    Returns:
+        {"sign": "Aries", "degree": 5.23, "ecliptic_longitude": 5.23}
+    """
+    from datetime import datetime, timezone
+    
+    # Парсим дату/время
+    dt_str = f"{birth_date} {birth_time}"
+    birth_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    
+    # Берём из calculate_natal_chart только Солнце
+    chart = calculate_natal_chart(birth_dt, latitude, longitude)
+    sun_data = chart["sun"]
+    
+    return {
+        "sign": sun_data["zodiac_sign"],
+        "degree": sun_data["degree"],
+        "ecliptic_longitude": sun_data["longitude"]
+    }
+
 if __name__ == "__main__":
     # Пример: Москва, 1 января 2000, 12:00 UTC
     test_dt = datetime(2000, 1, 1, 12, 0, tzinfo=timezone.utc)

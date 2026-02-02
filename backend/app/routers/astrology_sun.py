@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.core.astrology import calculate_sun_position
+from app.services.astrology_calculator import calculate_sun_position
 
 
 router = APIRouter(prefix="/astrology", tags=["Astrology"])

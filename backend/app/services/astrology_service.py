@@ -1,11 +1,4 @@
-import sys
-from pathlib import Path
-
-# Добавляем корень проекта в sys.path для импорта astro_calculator
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from astro_calculator import calculate_natal_chart, calculate_houses, calculate_aspects
-
+from app.services.astrology_calculator import calculate_natal_chart, calculate_houses, calculate_aspects
 
 def get_natal_chart(birth_dt, lat, lon, include_aspects=False):
     """
