@@ -1,10 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from app.schemas.natal_chart import (
     NatalChartRequest, 
     NatalChartResponse,
     NatalChartWithAspectsResponse
 )
 from app.services.astrology_service import get_natal_chart
+from redis.asyncio import Redis
+from app.db.redis import get_redis
+
 
 # Создаём роутер
 router = APIRouter()
@@ -70,3 +73,22 @@ async def astrology_health():
         "module": "astrology",
         "features": ["natal_chart", "planets", "houses", "aspects"]
     }
+
+
+@router.post("/interpret-chart")
+async def interpret_natal_chart(
+    request: NatalChartRequest,
+    redis: Redis = Depends(get_redis)
+):
+    """DeepSeek интерпретация натальной карты"""
+    from app.services.deepseek_service import get_interpretation
+    
+    chart = get_natal_chart(
+        request.birth_date,
+        request.latitude,
+        request.longitude,
+        include_aspects=True
+    )
+    
+    interpretation = await get_interpretation(chart, redis)
+    return {"interpretation": interpretation}
