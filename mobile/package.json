@@ -1,0 +1,30 @@
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-community/datetimepicker": "8.4.4",
+    "@reduxjs/toolkit": "^2.11.2",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "expo": "~54.0.33",
+    "expo-status-bar": "~3.0.9",
+    "geo-tz": "^8.1.5",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-redux": "^9.2.0"
+  },
+  "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/react": "~19.1.0",
+    "@types/react-redux": "^7.1.34",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
