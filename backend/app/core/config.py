@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     
-    # DeepSeek API
-    DEEPSEEK_API_KEY: str = "your_deepseek_api_key_here"
+       # GigaChat API (Сбер)
+    GIGACHAT_CLIENT_ID: str = "019c276d-99e9-7a42-9567-c34bca575ced"
+    GIGACHAT_CLIENT_SECRET: str = "MDE5YzI3NmQtOTllOS03YTQyLTk1NjctYzM0YmNhNTc1Y2VkOmRkZTYyZWE0LWQyOTctNDRkZi05MTkzLTRhOGQ3ZTliZDRiMw=="
     
     # Environment
     ENVIRONMENT: str = "development"

@@ -80,8 +80,8 @@ async def interpret_natal_chart(
     request: NatalChartRequest,
     redis: Redis = Depends(get_redis)
 ):
-    """DeepSeek интерпретация натальной карты"""
-    from app.services.deepseek_service import get_interpretation
+    """GigaChat интерпретация натальной карты"""
+    from app.services.gigachat_service import get_interpretation
     
     chart = get_natal_chart(
         request.birth_date,
@@ -92,3 +92,56 @@ async def interpret_natal_chart(
     
     interpretation = await get_interpretation(chart, redis)
     return {"interpretation": interpretation}
+@router.get("/cache/stats")
+async def cache_stats(redis: Redis = Depends(get_redis)):
+    """Статистика Redis кэша"""
+    keys = []
+    async for key in redis.scan_iter("interpretation:*"):
+        keys.append(key)
+    
+    stats = []
+    for key in keys[:10]:  # Первые 10 ключей
+        ttl = await redis.ttl(key)
+        value = await redis.get(key)
+        preview = (value.decode() if isinstance(value, bytes) else value)[:100] if value else "None"
+        
+        stats.append({
+            "key": key.decode() if isinstance(key, bytes) else key,
+            "ttl_seconds": ttl,
+            "ttl_days": round(ttl / 86400, 1),
+            "preview": preview
+        })
+    
+    return {
+        "total_keys": len(keys),
+        "samples": stats
+    }
+
+
+@router.delete("/cache/clear")
+async def clear_cache(redis: Redis = Depends(get_redis)):
+    """Очистить весь кэш интерпретаций (админ)"""
+    keys = []
+    async for key in redis.scan_iter("interpretation:*"):
+        keys.append(key)
+    
+    deleted_count = 0
+    if keys:
+        deleted_count = await redis.delete(*keys)
+    
+    return {
+        "message": "Кэш очищен",
+        "deleted_keys": deleted_count
+    }
+
+
+@router.delete("/cache/clear/{key_hash}")
+async def clear_specific_cache(key_hash: str, redis: Redis = Depends(get_redis)):
+    """Удалить конкретный ключ из кэша"""
+    full_key = f"interpretation:{key_hash}"
+    result = await redis.delete(full_key)
+    
+    if result:
+        return {"message": f"Ключ {key_hash} удалён"}
+    else:
+        return {"message": f"Ключ {key_hash} не найден"}

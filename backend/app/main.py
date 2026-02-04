@@ -47,7 +47,6 @@ app = FastAPI(
 # Подключаем роутеры
 app.include_router(test.router)
 app.include_router(astrology_router, prefix="/api/astrology", tags=["Astrology"])
-app.include_router(astrology_sun.router)
 
 @app.get("/health")
 async def health_check():
