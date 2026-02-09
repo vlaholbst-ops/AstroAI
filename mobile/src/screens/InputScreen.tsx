@@ -58,15 +58,43 @@ export const InputScreen: React.FC = () => {
     }
 
     if (!formData) {
-      Alert.alert('Ошибка', 'Заполните все поля');
+      if (Platform.OS === 'web') {
+        alert('Заполните все поля');
+      } else {
+        Alert.alert('Ошибка', 'Заполните все поля');
+      }
       return;
     }
 
     try {
-      await dispatch(calculateChart(formData)).unwrap();
-      Alert.alert('Успех', 'Натальная карта рассчитана!');
+      const result = await dispatch(calculateChart(formData)).unwrap();
+      
+      if (Platform.OS === 'web') {
+        // Web: используем window.alert
+        alert(
+          '✅ Успех! Натальная карта рассчитана!\n\n' +
+            `Планет найдено: ${Object.keys(result.planets || {}).length}\n` +
+            `Домов найдено: ${result.houses?.houses?.length || 0}`
+        );
+        
+        // Логируем результат в консоль
+        console.log('🎉 Natal Chart Result:', result);
+      } else {
+        // iOS/Android: нативный Alert
+        Alert.alert(
+          'Успех', 
+          'Натальная карта рассчитана!',
+          [
+            { text: 'OK', onPress: () => console.log('Chart calculated') }
+          ]
+        );
+      }
     } catch (error) {
-      Alert.alert('Ошибка', error as string);
+      if (Platform.OS === 'web') {
+        alert('❌ Ошибка: ' + (error as string));
+      } else {
+        Alert.alert('Ошибка', error as string);
+      }
     }
   };
 

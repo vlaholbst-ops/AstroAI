@@ -1,34 +1,47 @@
 // src/services/nominatimApi.ts
-import type { NominatimResult } from '../types/chart.types';
-import { NOMINATIM_CONFIG } from '../config';
 
 /**
- * Поиск города через Nominatim API (OpenStreetMap)
- * @param query - Название города (минимум 3 символа)
- * @returns Массив результатов (top 5)
+ * Nominatim Geocoding API
+ * Документация: https://nominatim.org/release-docs/latest/api/Search/
  */
+
+const NOMINATIM_CONFIG = {
+  BASE_URL: 'https://nominatim.openstreetmap.org/search',
+  USER_AGENT: 'AstroAI/1.0 (https://astroai.app)',
+  TIMEOUT: 5000,
+};
+
+export interface NominatimResult {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    country?: string;
+  };
+}
+
 export const searchLocation = async (query: string): Promise<NominatimResult[]> => {
-  // Минимальная длина запроса (защита от спама API)
-  if (query.length < 3) {
-    return [];
-  }
+  const params = new URLSearchParams({
+    q: query,
+    format: 'json',
+    addressdetails: '1',
+    limit: '5',
+  });
 
   try {
-    const url = new URL(`${NOMINATIM_CONFIG.BASE_URL}/search`);
-    url.searchParams.append('q', query);
-    url.searchParams.append('format', 'json');
-    url.searchParams.append('limit', '5');
-    url.searchParams.append('addressdetails', '1');
-
-    const response = await fetch(url.toString(), {
+    const response = await fetch(`${NOMINATIM_CONFIG.BASE_URL}?${params}`, {
       headers: {
-        'User-Agent': NOMINATIM_CONFIG.USER_AGENT, // ОБЯЗАТЕЛЬНО для Nominatim
+        'User-Agent': NOMINATIM_CONFIG.USER_AGENT,
       },
-      signal: AbortSignal.timeout(5000), // 5 секунд timeout
+      // Убрали signal: AbortSignal.timeout() - не поддерживается в React Native
     });
 
     if (!response.ok) {
-      throw new Error(`Nominatim API error: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -37,18 +50,4 @@ export const searchLocation = async (query: string): Promise<NominatimResult[]> 
     console.error('Geocoding failed:', error);
     return [];
   }
-};
-
-/**
- * Форматирование результата для отображения пользователю
- * @param result - Результат от Nominatim API
- * @returns "Город, Страна (координаты)"
- */
-export const formatLocationName = (result: NominatimResult): string => {
-  const { display_name, lat, lon } = result;
-  
-  // Сокращённое название (первые 2 части: "Москва, Россия")
-  const shortName = display_name.split(',').slice(0, 2).join(',').trim();
-  
-  return `${shortName} (${parseFloat(lat).toFixed(4)}, ${parseFloat(lon).toFixed(4)})`;
 };

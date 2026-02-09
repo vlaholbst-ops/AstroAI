@@ -11,6 +11,8 @@ from app.db.redis import init_redis, close_redis, get_redis
 from app.routers import test
 from app.db.init_db import create_tables
 from app.routers import astrology_sun
+from fastapi.middleware.cors import CORSMiddleware
+
 
 
 @asynccontextmanager
@@ -42,6 +44,15 @@ app = FastAPI(
     description="Backend API для расчёта натальных карт и AI-интерпретации",
     version="0.1.0",
     lifespan=lifespan
+)
+
+# CORS middleware для фронтенда
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Разрешить все (только для разработки!)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Подключаем роутеры

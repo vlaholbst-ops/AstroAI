@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Platform,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -29,7 +30,32 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
   const [tempDate, setTempDate] = useState(value || new Date());
 
   const isIOS = Platform.OS === 'ios';
-  const maxDate = new Date(); // Запрет выбора будущих дат
+  const isWeb = Platform.OS === 'web';
+  const maxDate = new Date();
+
+  // WEB: HTML5 datetime-local input
+  if (isWeb) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>Дата и время рождения</Text>
+        <TextInput
+          style={[styles.input, error && styles.inputError]}
+          value={value ? format(value, "yyyy-MM-dd'T'HH:mm") : ''}
+          onChangeText={(text) => {
+            const newDate = new Date(text);
+            if (!isNaN(newDate.getTime())) {
+              onChange(newDate);
+            }
+          }}
+          placeholder="Выберите дату и время"
+          // @ts-ignore - Web-specific props
+          type="datetime-local"
+          max={format(maxDate, "yyyy-MM-dd'T'HH:mm")}
+        />
+        {error && <Text style={styles.errorText}>{error}</Text>}
+      </View>
+    );
+  }
 
   // iOS: один picker для date + time
   const handleIOSChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -48,7 +74,7 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
     setShowDatePicker(false);
     if (event.type === 'set' && selectedDate) {
       setTempDate(selectedDate);
-      setShowTimePicker(true); // Сразу показываем time picker
+      setShowTimePicker(true);
     }
   };
 
