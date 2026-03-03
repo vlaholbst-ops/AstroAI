@@ -66,8 +66,10 @@ def calculate_planet_position(planet_name: str, dt: datetime, lat: float, lon: f
     astrometric = location.at(t).observe(planet_body)
     ra, dec, distance = astrometric.radec()
     
-    # Получаем эклиптическую долготу (зодиакальную позицию)
-    lat_ecliptic, lon_ecliptic, distance_ecliptic = astrometric.ecliptic_latlon()
+    # Получаем эклиптическую долготу в тропическом зодиаке (epoch='date')
+    # ВАЖНО: без epoch='date' возвращаются координаты J2000.0, что даёт
+    # систематическую ошибку ~1.4° для 1900 г. и ~0.36° для 2026 г.
+    lat_ecliptic, lon_ecliptic, distance_ecliptic = astrometric.apparent().ecliptic_latlon(epoch='date')
     
     # Преобразуем долготу в градусы (0-360)
     longitude_deg = lon_ecliptic.degrees % 360

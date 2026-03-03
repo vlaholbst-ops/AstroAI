@@ -1,4 +1,4 @@
-from app.core.astrology import calculate_sun_position
+from app.services.astrology_calculator import calculate_sun_position
 
 def print_test_header(title: str):
     print("=" * 60)
