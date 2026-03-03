@@ -182,3 +182,8 @@ cython_debug/
 # Эфемериды NASA (большие файлы, не нужны в Git)
 backend/ephemeris/
 *.bsp
+
+# Логи GigaChat (содержат данные запросов, не нужны в Git)
+backend/logs/*.log
+backend/logs/*.log-*
+backend/logs/*.gz
