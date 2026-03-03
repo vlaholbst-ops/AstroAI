@@ -83,7 +83,7 @@ export interface BirthData {
   
   // Redux state для натальной карты
   export interface ChartState {
-    data: NatalChartFull | null;
+    chartData: NatalChartFull | null;
     loading: boolean;
     error: string | null;
   }

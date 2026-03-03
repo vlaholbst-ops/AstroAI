@@ -16,6 +16,7 @@ const store = configureStore({
         ignoredPaths: ['form.birth_date'],
       },
     }),
+  devTools: __DEV__,
 });
 
 export type RootState = ReturnType<typeof store.getState>;

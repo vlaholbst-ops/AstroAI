@@ -1,5 +1,6 @@
 // src/store/slices/chartSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { RootState } from '../store';
 import type { ChartState, BirthData, NatalChartFull } from '../../types/chart.types';
 import { calculateChartFull } from '../../services/astrologyApi';
 
@@ -23,7 +24,7 @@ export const calculateChart = createAsyncThunk<
 );
 
 const initialState: ChartState = {
-  data: null,
+  chartData: null,
   loading: false,
   error: null,
 };
@@ -33,7 +34,7 @@ const chartSlice = createSlice({
   initialState,
   reducers: {
     clearChart(state) {
-      state.data = null;
+      state.chartData = null;
       state.error = null;
     },
   },
@@ -45,7 +46,7 @@ const chartSlice = createSlice({
       })
       .addCase(calculateChart.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        state.chartData = action.payload;
       })
       .addCase(calculateChart.rejected, (state, action) => {
         state.loading = false;
@@ -56,3 +57,9 @@ const chartSlice = createSlice({
 
 export const { clearChart } = chartSlice.actions;
 export default chartSlice.reducer;
+
+// Selectors
+export const selectChartData = (state: RootState) => state.chart.chartData;
+export const selectChartLoading = (state: RootState) => state.chart.loading;
+export const selectChartError = (state: RootState) => state.chart.error;
+export const selectChartIsLoaded = (state: RootState) => state.chart.chartData !== null;

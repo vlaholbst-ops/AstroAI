@@ -16,7 +16,7 @@ import {
   setErrors,
   selectFormData,
 } from '../store/slices/formSlice';
-import { calculateChart } from '../store/slices/chartSlice';
+import { calculateChart, selectChartLoading } from '../store/slices/chartSlice';
 import { BirthDatePicker } from '../components/BirthDatePicker';
 import { LocationAutocomplete } from '../components/LocationAutocomplete';
 import { SubmitButton } from '../components/SubmitButton';
@@ -26,7 +26,7 @@ export const InputScreen: React.FC = () => {
 
   // Redux state
   const formState = useAppSelector((state) => state.form);
-  const chartState = useAppSelector((state) => state.chart);
+  const chartLoading = useAppSelector(selectChartLoading);
   const formData = useAppSelector(selectFormData);
 
   // Валидация формы
@@ -132,7 +132,7 @@ export const InputScreen: React.FC = () => {
           <SubmitButton
             title="Рассчитать натальную карту"
             onPress={handleSubmit}
-            loading={chartState.loading}
+            loading={chartLoading}
             disabled={!formData}
             style={styles.submitButton}
           />
