@@ -1,6 +1,8 @@
 from sqlalchemy import text
 from app.db.session import engine, Base
-from app.models.test import TestRecord  # Импортируем модель
+from app.models.test import TestRecord  # noqa: F401
+# Регистрируем production-модели в Base.metadata
+from app.models import User, Subscription, NatalChart, AIInterpretation  # noqa: F401
 
 
 async def create_tables():

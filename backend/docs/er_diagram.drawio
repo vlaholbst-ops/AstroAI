@@ -1,0 +1,169 @@
+<mxfile host="app.diagrams.net" modified="2026-03-03T12:00:00.000Z" agent="Claude Sonnet 4.6" version="21.0.0" type="device">
+  <diagram id="astroai-er" name="AstroAI ER Diagram">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== TABLE: users ==================== -->
+        <mxCell id="tbl_users" value="users" style="swimlane;fontStyle=1;align=center;startSize=30;container=1;collapsible=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="300" height="228" as="geometry" />
+        </mxCell>
+        <mxCell id="u_id" value="🔑  id : UUID  [PK]" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=1;" vertex="1" parent="tbl_users">
+          <mxGeometry y="30" width="300" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="u_email" value="  email : VARCHAR(255)  UNIQUE NOT NULL  [IDX]" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_users">
+          <mxGeometry y="58" width="300" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="u_username" value="  username : VARCHAR(100)  UNIQUE  [IDX]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_users">
+          <mxGeometry y="86" width="300" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="u_password" value="  password_hash : VARCHAR(255)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_users">
+          <mxGeometry y="114" width="300" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="u_active" value="  is_active : BOOLEAN  DEFAULT true" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_users">
+          <mxGeometry y="142" width="300" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="u_created" value="  created_at : TIMESTAMPTZ" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_users">
+          <mxGeometry y="170" width="300" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="u_updated" value="  updated_at : TIMESTAMPTZ" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_users">
+          <mxGeometry y="198" width="300" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== TABLE: subscriptions ==================== -->
+        <mxCell id="tbl_subs" value="subscriptions" style="swimlane;fontStyle=1;align=center;startSize=30;container=1;collapsible=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="440" y="80" width="320" height="256" as="geometry" />
+        </mxCell>
+        <mxCell id="s_id" value="🔑  id : UUID  [PK]" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=1;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="30" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_uid" value="🔗  user_id : UUID  FK→users.id  UNIQUE  [IDX]" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=2;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="58" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_plan" value="  plan : ENUM(free, basic, premium)  DEFAULT free" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="86" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_status" value="  status : ENUM(active, cancelled, expired)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="114" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_started" value="  started_at : TIMESTAMPTZ" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="142" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_expires" value="  expires_at : TIMESTAMPTZ  (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="170" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_created" value="  created_at : TIMESTAMPTZ" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="198" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="s_updated" value="  updated_at : TIMESTAMPTZ" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_subs">
+          <mxGeometry y="226" width="320" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== TABLE: natal_charts ==================== -->
+        <mxCell id="tbl_charts" value="natal_charts" style="swimlane;fontStyle=1;align=center;startSize=30;container=1;collapsible=0;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=14;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="320" height="284" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_id" value="🔑  id : UUID  [PK]" style="text;strokeColor=#d6b656;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=1;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="30" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_uid" value="🔗  user_id : UUID  FK→users.id  (nullable)  [IDX]" style="text;strokeColor=#d6b656;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=2;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="58" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_birth" value="  birth_date : TIMESTAMPTZ NOT NULL  [IDX]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="86" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_lat" value="  latitude : FLOAT NOT NULL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="114" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_lon" value="  longitude : FLOAT NOT NULL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="142" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_loc" value="  location_name : VARCHAR(255)  (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="170" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_planets" value="  planets_data : JSONB NOT NULL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="198" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_houses" value="  houses_data : JSONB NOT NULL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="226" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="nc_aspects" value="  aspects_data : JSONB  (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_charts">
+          <mxGeometry y="254" width="320" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== TABLE: ai_interpretations ==================== -->
+        <mxCell id="tbl_interp" value="ai_interpretations" style="swimlane;fontStyle=1;align=center;startSize=30;container=1;collapsible=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="460" y="430" width="320" height="256" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_id" value="🔑  id : UUID  [PK]" style="text;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=1;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="30" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_ncid" value="🔗  natal_chart_id : UUID  FK→natal_charts.id  [IDX]" style="text;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;fontStyle=2;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="58" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_hash" value="  prompt_hash : VARCHAR(32)  [IDX]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="86" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_text" value="  interpretation_text : TEXT NOT NULL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="114" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_model" value="  model_version : VARCHAR(50)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="142" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_tokens" value="  token_count : INTEGER" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="170" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_time" value="  response_time_ms : INTEGER" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="198" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_created" value="  created_at : TIMESTAMPTZ" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;rotatable=0;" vertex="1" parent="tbl_interp">
+          <mxGeometry y="226" width="320" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== FK EDGES ==================== -->
+
+        <!-- users.id ←── subscriptions.user_id  (1:1, CASCADE) -->
+        <mxCell id="fk_subs_users" value="1 : 1&#xa;CASCADE" style="edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToOne;endFill=0;strokeColor=#82b366;fontStyle=2;fontSize=10;" edge="1" source="u_id" target="s_uid" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="122" />
+              <mxPoint x="420" y="122" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- users.id ←── natal_charts.user_id  (1:N, SET NULL) -->
+        <mxCell id="fk_charts_users" value="1 : N&#xa;SET NULL" style="edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;strokeColor=#d6b656;fontStyle=2;fontSize=10;" edge="1" source="u_id" target="nc_uid" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="370" />
+              <mxPoint x="200" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- natal_charts.id ←── ai_interpretations.natal_chart_id  (1:N, CASCADE) -->
+        <mxCell id="fk_interp_charts" value="1 : N&#xa;CASCADE" style="edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=ERmandOne;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#b85450;fontStyle=2;fontSize=10;" edge="1" source="nc_id" target="ai_ncid" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="460" />
+              <mxPoint x="440" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== LEGEND ==================== -->
+        <mxCell id="legend" value="&lt;b&gt;Легенда&lt;/b&gt;&lt;br&gt;🔑 Primary Key&lt;br&gt;🔗 Foreign Key&lt;br&gt;[IDX] Index&lt;br&gt;[PK] Primary Key&lt;br&gt;UNIQUE уникальный" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="830" y="80" width="180" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="AstroAI — Database ER Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
