@@ -1,35 +1,18 @@
 // src/store/slices/chartSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { ChartState, BirthData, NatalChart } from '../../types/chart.types';
-import { API_CONFIG } from '../../config';
+import type { ChartState, BirthData, NatalChartFull } from '../../types/chart.types';
+import { calculateChartFull } from '../../services/astrologyApi';
 
-// Async Thunk для расчёта натальной карты
+// Async Thunk для расчёта натальной карты (планеты + дома + аспекты)
 export const calculateChart = createAsyncThunk<
-  NatalChart,           // Тип возвращаемого значения
-  BirthData,            // Тип аргумента
+  NatalChartFull,         // Тип возвращаемого значения
+  BirthData,              // Тип аргумента
   { rejectValue: string } // Тип ошибки
 >(
   'chart/calculate',
   async (data: BirthData, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CALCULATE_CHART}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-          signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
-      }
-
-      return await response.json();
+      return await calculateChartFull(data);
     } catch (error) {
       if (error instanceof Error) {
         return rejectWithValue(error.message);

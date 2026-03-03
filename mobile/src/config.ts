@@ -13,6 +13,7 @@ export const API_CONFIG = {
   
   ENDPOINTS: {
     CALCULATE_CHART: '/api/astrology/calculate-chart',
+    CALCULATE_CHART_FULL: '/api/astrology/calculate-chart-full',
   },
   
   TIMEOUT: 10000, // 10 секунд

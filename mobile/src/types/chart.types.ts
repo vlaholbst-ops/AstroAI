@@ -32,7 +32,7 @@ export interface BirthData {
     longitude: number;
   }
   
-  // Полная натальная карта (ответ от backend)
+  // Базовая натальная карта (планеты + дома)
   export interface NatalChart {
     planets: Record<string, PlanetPosition>;
     houses: {
@@ -41,7 +41,25 @@ export interface BirthData {
       houses: House[];
     };
   }
-  
+
+  // Аспект между двумя планетами (из /calculate-chart-full)
+  export interface Aspect {
+    planet1: string;
+    planet2: string;
+    aspect_type: string;    // "Conjunction", "Opposition", "Trine", "Square", "Sextile"
+    aspect_symbol: string;  // "☌", "☍", "△", "□", "⚹"
+    angle: number;          // точный угол аспекта (0, 180, 120, 90, 60)
+    exact_angle: number;    // целочисленный угол
+    orb: number;            // отклонение от точного аспекта
+    planet1_position: string; // "10.4° Козерог"
+    planet2_position: string;
+  }
+
+  // Полная натальная карта с аспектами (из /calculate-chart-full)
+  export interface NatalChartFull extends NatalChart {
+    aspects: Aspect[];
+  }
+
   // Nominatim API (геокодинг)
   export interface NominatimResult {
     display_name: string;  // "Москва, Россия"
@@ -65,7 +83,7 @@ export interface BirthData {
   
   // Redux state для натальной карты
   export interface ChartState {
-    data: NatalChart | null;
+    data: NatalChartFull | null;
     loading: boolean;
     error: string | null;
   }
