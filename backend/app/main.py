@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from app.routers.astrology import router as astrology_router
+from app.routers.charts import router as charts_router
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -58,6 +59,7 @@ app.add_middleware(
 # Подключаем роутеры
 app.include_router(test.router)
 app.include_router(astrology_router, prefix="/api/astrology", tags=["Astrology"])
+app.include_router(charts_router,    prefix="/api/charts",    tags=["Charts"])
 
 @app.get("/health")
 async def health_check():
