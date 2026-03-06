@@ -1,5 +1,6 @@
 // src/screens/ChartResultsScreen.tsx
 // TSK-64: dark mode через useTheme() + fade-in анимация когда данные загружены.
+// TSK-68: React Navigation — navigation prop, useFocusEffect для очистки Redux при уходе.
 // Skeleton показывается пока loading=true, контент появляется с fade-in (350 мс).
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
@@ -11,6 +12,7 @@ import {
   Animated,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   clearChart,
@@ -22,6 +24,7 @@ import { PlanetCard, SIGN_NAMES } from '../components/PlanetCard';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { useTheme } from '../theme';
 import type { House, AngularPoint } from '../types/chart.types';
+import type { ChartResultsScreenNavigationProp } from '../navigation/types';
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 
@@ -94,7 +97,9 @@ const AngularCard: React.FC<AngularCardProps> = ({
 
 // ─── ChartResultsScreen ───────────────────────────────────────────────────────
 
-export const ChartResultsScreen: React.FC = () => {
+type Props = { navigation: ChartResultsScreenNavigationProp };
+
+export const ChartResultsScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch           = useAppDispatch();
   const { colors, isDark } = useTheme();
 
@@ -103,26 +108,33 @@ export const ChartResultsScreen: React.FC = () => {
   const error     = useAppSelector(selectChartError);
 
   // ── Fade-in: контент появляется плавно когда данные приходят ──────────────
-  // TSK-64: "анимация fade-in при загрузке данных"
   const contentFadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (chartData) {
-      // Данные загружены — плавно показываем контент
       Animated.timing(contentFadeAnim, {
         toValue: 1,
         duration: 350,
         useNativeDriver: true,
       }).start();
     } else {
-      // Данные сброшены (clearChart) — сразу скрываем, скелетон покажется
       contentFadeAnim.setValue(0);
     }
   }, [chartData, contentFadeAnim]);
 
+  // ── TSK-68: очищаем Redux при уходе с экрана (back gesture, hardware back) ──
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        dispatch(clearChart());
+      };
+    }, [dispatch])
+  );
+
+  // ── Кнопка «Назад» ────────────────────────────────────────────────────────
   const handleBack = useCallback(() => {
-    dispatch(clearChart());
-  }, [dispatch]);
+    navigation.goBack();
+  }, [navigation]);
 
   // ── Состояние ошибки ──────────────────────────────────────────────────────
 

@@ -1,12 +1,12 @@
 // src/screens/InputScreen.tsx
 // TSK-64: dark mode через useTheme(). Палитра: light #FFFFFF/#000000, dark #1A1A1A/#FFFFFF.
+// TSK-68: React Navigation — navigation prop, navigate('ChartResults') после dispatch.
 import React from 'react';
 import {
   View,
   ScrollView,
   Text,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -22,8 +22,11 @@ import { BirthDatePicker } from '../components/BirthDatePicker';
 import { LocationAutocomplete } from '../components/LocationAutocomplete';
 import { SubmitButton } from '../components/SubmitButton';
 import { useTheme } from '../theme';
+import type { InputScreenNavigationProp } from '../navigation/types';
 
-export const InputScreen: React.FC = () => {
+type Props = { navigation: InputScreenNavigationProp };
+
+export const InputScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch           = useAppDispatch();
   const { colors, isDark } = useTheme();
 
@@ -54,42 +57,16 @@ export const InputScreen: React.FC = () => {
   };
 
   // ── Отправка формы ────────────────────────────────────────────────────────
+  // TSK-68: dispatch + navigate одновременно → скелетон в ChartResults во время загрузки
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!validateForm()) return;
+    if (!formData) return;
 
-    if (!formData) {
-      // Alert.alert не работает на Web (CLAUDE.md)
-      if (Platform.OS === 'web') {
-        alert('Заполните все поля');
-      } else {
-        Alert.alert('Ошибка', 'Заполните все поля');
-      }
-      return;
-    }
-
-    try {
-      const result = await dispatch(calculateChart(formData)).unwrap();
-
-      if (Platform.OS === 'web') {
-        alert(
-          '✅ Успех! Натальная карта рассчитана!\n\n' +
-          'Планет найдено: ' + Object.keys(result.planets || {}).length + '\n' +
-          'Домов найдено: ' + (result.houses?.houses?.length || 0)
-        );
-        console.log('🎉 Natal Chart Result:', result);
-      } else {
-        Alert.alert('Успех', 'Натальная карта рассчитана!', [
-          { text: 'OK', onPress: () => console.log('Chart calculated') },
-        ]);
-      }
-    } catch (error) {
-      if (Platform.OS === 'web') {
-        alert('❌ Ошибка: ' + (error as string));
-      } else {
-        Alert.alert('Ошибка', error as string);
-      }
-    }
+    // Запускаем расчёт (async thunk, не ждём результат)
+    dispatch(calculateChart(formData));
+    // Сразу переходим на экран результатов — он покажет скелетон
+    navigation.navigate('ChartResults');
   };
 
   // ── Рендер ────────────────────────────────────────────────────────────────

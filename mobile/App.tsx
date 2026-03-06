@@ -1,61 +1,33 @@
 // App.tsx
+// TSK-68: React Navigation — заменяет условный Redux-рендеринг.
 import React from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import store from './src/store/store';
-import { useAppSelector } from './src/store/hooks';
-import {
-  selectChartIsLoaded,
-  selectChartLoading,
-  selectChartError,
-} from './src/store/slices/chartSlice';
-import { InputScreen } from './src/screens/InputScreen';
-import { ChartResultsScreen } from './src/screens/ChartResultsScreen';
+import AppNavigator from './src/navigation/AppNavigator';
 
-// ─── Роутер ───────────────────────────────────────────────────────────────────
-// Лёгкий conditional routing без React Navigation.
-// Переход: InputScreen → ChartResultsScreen при старте запроса.
-// Обратно: кнопка «← Назад» в ChartResultsScreen → dispatch(clearChart()).
-
-const AppNavigator: React.FC = () => {
+// Root внутри Provider — нужен useColorScheme для StatusBar
+const Root: React.FC = () => {
   const colorScheme = useColorScheme();
-  const isDark      = colorScheme === 'dark';
-
-  const isLoading = useAppSelector(selectChartLoading);
-  const isLoaded  = useAppSelector(selectChartIsLoaded);
-  const hasError  = useAppSelector(selectChartError);
-
-  // Показываем ChartResultsScreen как только начался запрос (loading),
-  // пришли данные (isLoaded) или случилась ошибка (hasError).
-  const showResults = isLoading || isLoaded || Boolean(hasError);
+  const isDark = colorScheme === 'dark';
 
   return (
-    <>
+    <NavigationContainer>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor="transparent"
         translucent={false}
       />
-      {showResults ? <ChartResultsScreen /> : <InputScreen />}
-    </>
+      <AppNavigator />
+    </NavigationContainer>
   );
 };
-
-// ─── Корневой компонент ───────────────────────────────────────────────────────
 
 export default function App() {
   return (
     <Provider store={store}>
-      <SafeAreaView style={styles.container}>
-        <AppNavigator />
-      </SafeAreaView>
+      <Root />
     </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-  },
-});
