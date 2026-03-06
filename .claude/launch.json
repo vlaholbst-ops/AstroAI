@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/macbook/Documents/projects/AstroAI/backend && source venv/bin/activate && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"],
+      "port": 8000
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/macbook/Documents/projects/AstroAI/mobile && npm start"],
+      "port": 8081
+    },
+    {
+      "name": "mobile-web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/macbook/Documents/projects/AstroAI/mobile && npm run web"],
+      "port": 19006
+    }
+  ]
+}
