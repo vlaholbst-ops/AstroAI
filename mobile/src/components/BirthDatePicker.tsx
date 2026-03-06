@@ -1,6 +1,7 @@
 // src/components/BirthDatePicker.tsx
 // TSK-64: добавлен isDark prop для поддержки dark mode.
-import React, { useState } from 'react';
+// Fix: webInputValue — локальный state чтобы поле не сбрасывалось при невалидной дате.
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -43,6 +44,17 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
   const textColor        = isDark ? '#FFFFFF' : '#000000';
   const placeholderColor = isDark ? '#6B7280' : '#999999';
 
+  // ── Web: локальный state чтобы поле не сбрасывалось при частичном вводе ──
+  const formatForInput = (d: Date | null) =>
+    d ? format(d, "yyyy-MM-dd'T'HH:mm") : '';
+
+  const [webInputValue, setWebInputValue] = useState(formatForInput(value));
+
+  // Синхронизация если value изменился снаружи (сброс формы и т.п.)
+  useEffect(() => {
+    setWebInputValue(formatForInput(value));
+  }, [value]);
+
   // WEB: HTML5 datetime-local input
   if (isWeb) {
     return (
@@ -59,8 +71,10 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
               color: textColor,
             },
           ]}
-          value={value ? format(value, "yyyy-MM-dd'T'HH:mm") : ''}
+          value={webInputValue}
           onChangeText={(text) => {
+            // Всегда обновляем локальный state — поле не сбрасывается
+            setWebInputValue(text);
             const newDate = new Date(text);
             if (!isNaN(newDate.getTime())) {
               onChange(newDate);
@@ -70,7 +84,7 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
           placeholderTextColor={placeholderColor}
           // @ts-ignore — Web-specific prop
           type="datetime-local"
-          max={format(maxDate, "yyyy-MM-dd'T'HH:mm")}
+          max={formatForInput(maxDate)}
         />
         {error && <Text style={styles.errorText}>{error}</Text>}
       </View>

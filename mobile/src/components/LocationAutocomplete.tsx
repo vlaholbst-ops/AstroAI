@@ -4,13 +4,14 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import debounce from 'lodash.debounce';
 import { searchLocation, formatLocationName } from '../services/nominatimApi';
+import { useTheme } from '../theme';
 import type { NominatimResult } from '../types/chart.types';
 
 interface LocationAutocompleteProps {
@@ -24,6 +25,7 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   onSelect,
   error,
 }) => {
+  const { colors } = useTheme();
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,8 +44,8 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       try {
         const data = await searchLocation(searchQuery);
         setResults(data);
-      } catch (error) {
-        console.error('Search failed:', error);
+      } catch (err) {
+        console.error('Search failed:', err);
         setResults([]);
       } finally {
         setLoading(false);
@@ -69,7 +71,6 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     );
   };
 
-  // Очистка debounce при unmount
   useEffect(() => {
     return () => {
       debouncedSearch.cancel();
@@ -78,14 +79,23 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Место рождения</Text>
+      <Text style={[styles.label, { color: colors.label }]}>
+        Место рождения
+      </Text>
 
       <TextInput
-        style={[styles.input, error && styles.inputError]}
+        style={[
+          styles.input,
+          {
+            backgroundColor: colors.inputBg,
+            borderColor: error ? '#B00020' : colors.inputBorder,
+            color: colors.text,
+          },
+        ]}
         value={query}
         onChangeText={handleChangeText}
         placeholder="Начните вводить город..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.placeholder}
         autoCorrect={false}
         onFocus={() => setShowResults(true)}
       />
@@ -98,23 +108,37 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
         </View>
       )}
 
+      {/* FlatList запрещён внутри ScrollView (CLAUDE.md) — используем .map() */}
       {showResults && results.length > 0 && (
-        <View style={styles.resultsContainer}>
-          <FlatList
-            data={results}
-            keyExtractor={(item, index) => `${item.lat}-${item.lon}-${index}`}
-            renderItem={({ item }) => (
+        <View
+          style={[
+            styles.resultsContainer,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
+          <ScrollView
+            style={styles.resultsList}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+          >
+            {results.map((item, index) => (
               <TouchableOpacity
-                style={styles.resultItem}
+                key={`${item.lat}-${item.lon}-${index}`}
+                style={[
+                  styles.resultItem,
+                  { borderBottomColor: colors.cardBorder },
+                ]}
                 onPress={() => handleSelectLocation(item)}
               >
-                <Text style={styles.resultText}>
+                <Text style={[styles.resultText, { color: colors.text }]}>
                   {formatLocationName(item)}
                 </Text>
               </TouchableOpacity>
-            )}
-            style={styles.resultsList}
-          />
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>
@@ -129,19 +153,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  inputError: {
-    borderColor: '#B00020',
   },
   errorText: {
     fontSize: 12,
@@ -156,14 +174,8 @@ const styles = StyleSheet.create({
   resultsContainer: {
     marginTop: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
-    backgroundColor: '#fff',
     maxHeight: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
   },
   resultsList: {
@@ -172,10 +184,8 @@ const styles = StyleSheet.create({
   resultItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   resultText: {
     fontSize: 14,
-    color: '#333',
   },
 });

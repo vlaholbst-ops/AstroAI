@@ -51,3 +51,16 @@ export const searchLocation = async (query: string): Promise<NominatimResult[]> 
     return [];
   }
 };
+
+export function formatLocationName(result: NominatimResult): string {
+  const city =
+    result.address?.city ||
+    result.address?.town ||
+    result.address?.village;
+  const country = result.address?.country;
+
+  if (city && country) return `${city}, ${country}`;
+  if (city) return city;
+  // Fallback: первые две части display_name (город, страна)
+  return result.display_name.split(', ').slice(0, 2).join(', ');
+}
