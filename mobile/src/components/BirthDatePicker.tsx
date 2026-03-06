@@ -1,4 +1,5 @@
 // src/components/BirthDatePicker.tsx
+// TSK-64: добавлен isDark prop для поддержки dark mode.
 import React, { useState } from 'react';
 import {
   View,
@@ -18,12 +19,14 @@ interface BirthDatePickerProps {
   value: Date | null;
   onChange: (date: Date) => void;
   error?: string;
+  isDark?: boolean;
 }
 
 export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
   value,
   onChange,
   error,
+  isDark = false,
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -33,13 +36,29 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
   const isWeb = Platform.OS === 'web';
   const maxDate = new Date();
 
+  // Цвета в зависимости от темы
+  const labelColor       = isDark ? '#D1D5DB' : '#333333';
+  const inputBg          = isDark ? '#1E1E2E' : '#FFFFFF';
+  const inputBorderColor = error ? '#B00020' : (isDark ? '#3E3E4E' : '#DDDDDD');
+  const textColor        = isDark ? '#FFFFFF' : '#000000';
+  const placeholderColor = isDark ? '#6B7280' : '#999999';
+
   // WEB: HTML5 datetime-local input
   if (isWeb) {
     return (
       <View style={styles.container}>
-        <Text style={styles.label}>Дата и время рождения</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Дата и время рождения
+        </Text>
         <TextInput
-          style={[styles.input, error && styles.inputError]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorderColor,
+              color: textColor,
+            },
+          ]}
           value={value ? format(value, "yyyy-MM-dd'T'HH:mm") : ''}
           onChangeText={(text) => {
             const newDate = new Date(text);
@@ -48,7 +67,8 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
             }
           }}
           placeholder="Выберите дату и время"
-          // @ts-ignore - Web-specific props
+          placeholderTextColor={placeholderColor}
+          // @ts-ignore — Web-specific prop
           type="datetime-local"
           max={format(maxDate, "yyyy-MM-dd'T'HH:mm")}
         />
@@ -99,13 +119,25 @@ export const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Дата и время рождения</Text>
+      <Text style={[styles.label, { color: labelColor }]}>
+        Дата и время рождения
+      </Text>
 
       <TouchableOpacity
-        style={[styles.input, error && styles.inputError]}
+        style={[
+          styles.input,
+          {
+            backgroundColor: inputBg,
+            borderColor: inputBorderColor,
+          },
+        ]}
         onPress={() => setShowDatePicker(true)}
+        activeOpacity={0.7}
       >
-        <Text style={[styles.inputText, !value && styles.placeholderText]}>
+        <Text style={[
+          styles.inputText,
+          { color: value ? textColor : placeholderColor },
+        ]}>
           {displayValue}
         </Text>
       </TouchableOpacity>
@@ -154,25 +186,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 16,
-    backgroundColor: '#fff',
-  },
-  inputError: {
-    borderColor: '#B00020',
   },
   inputText: {
     fontSize: 16,
-    color: '#000',
-  },
-  placeholderText: {
-    color: '#999',
   },
   errorText: {
     fontSize: 12,

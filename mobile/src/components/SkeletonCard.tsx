@@ -1,13 +1,13 @@
 // src/components/SkeletonCard.tsx
-// Анимированный skeleton-placeholder для PlanetCard пока loading=true
+// TSK-64: Skeleton-placeholder для PlanetCard пока loading=true.
+// Пульсирующая анимация shimmer (opacity 0.3 ↔ 1).
+// Тема берётся из useTheme() — isDark prop больше не нужен.
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet } from 'react-native';
+import { useTheme } from '../theme';
 
-interface SkeletonCardProps {
-  isDark?: boolean;
-}
-
-export const SkeletonCard: React.FC<SkeletonCardProps> = ({ isDark = false }) => {
+export const SkeletonCard: React.FC = () => {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -29,22 +29,27 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({ isDark = false }) =>
     return () => animation.stop();
   }, [opacity]);
 
-  const shimmer = isDark ? '#2A2A3E' : '#E5E7EB';
-  const cardBg  = isDark ? '#1E1E2E' : '#FFFFFF';
-  const border  = isDark ? '#2E2E3E' : '#E8E8EE';
-
   return (
     <Animated.View
-      style={[styles.card, { backgroundColor: cardBg, borderColor: border, opacity }]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.skeletonCard,
+          borderColor: colors.cardBorder,
+          opacity,
+        },
+      ]}
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
     >
-      {/* Круглый placeholder для символа */}
-      <View style={[styles.circle, { backgroundColor: shimmer }]} />
+      {/* Круглый placeholder для символа планеты */}
+      <View style={[styles.circle, { backgroundColor: colors.skeleton }]} />
 
       {/* Три строки текста */}
       <View style={styles.lines}>
-        <View style={[styles.lineLong,   { backgroundColor: shimmer }]} />
-        <View style={[styles.lineMedium, { backgroundColor: shimmer }]} />
-        <View style={[styles.lineShort,  { backgroundColor: shimmer }]} />
+        <View style={[styles.lineLong,   { backgroundColor: colors.skeleton }]} />
+        <View style={[styles.lineMedium, { backgroundColor: colors.skeleton }]} />
+        <View style={[styles.lineShort,  { backgroundColor: colors.skeleton }]} />
       </View>
     </Animated.View>
   );
