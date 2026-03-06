@@ -1,12 +1,8 @@
 // src/components/PlanetCard.tsx
+// TSK-64: переведён на useTheme() вместо прямого useColorScheme().
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  useColorScheme,
-  ViewStyle,
-} from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { useTheme } from '../theme';
 
 // ─── Типы ────────────────────────────────────────────────────────────────────
 
@@ -29,35 +25,32 @@ export interface PlanetCardProps {
 
 // ─── Справочники ─────────────────────────────────────────────────────────────
 
-// Unicode-символы планет
 export const PLANET_SYMBOLS: Record<string, string> = {
-  sun:         '☉',
-  moon:        '☽',
-  mercury:     '☿',
-  venus:       '♀',
-  mars:        '♂',
-  jupiter:     '♃',
-  saturn:      '♄',
-  uranus:      '♅',
-  neptune:     '♆',
-  pluto:       '♇',
+  sun:       '☉',
+  moon:      '☽',
+  mercury:   '☿',
+  venus:     '♀',
+  mars:      '♂',
+  jupiter:   '♃',
+  saturn:    '♄',
+  uranus:    '♅',
+  neptune:   '♆',
+  pluto:     '♇',
 };
 
-// Русские названия планет
 export const PLANET_NAMES: Record<string, string> = {
-  sun:         'Солнце',
-  moon:        'Луна',
-  mercury:     'Меркурий',
-  venus:       'Венера',
-  mars:        'Марс',
-  jupiter:     'Юпитер',
-  saturn:      'Сатурн',
-  uranus:      'Уран',
-  neptune:     'Нептун',
-  pluto:       'Плутон',
+  sun:       'Солнце',
+  moon:      'Луна',
+  mercury:   'Меркурий',
+  venus:     'Венера',
+  mars:      'Марс',
+  jupiter:   'Юпитер',
+  saturn:    'Сатурн',
+  uranus:    'Уран',
+  neptune:   'Нептун',
+  pluto:     'Плутон',
 };
 
-// Русские названия знаков зодиака
 export const SIGN_NAMES: Record<string, string> = {
   aries:         'Овен',
   taurus:        'Телец',
@@ -73,28 +66,25 @@ export const SIGN_NAMES: Record<string, string> = {
   pisces:        'Рыбы',
 };
 
-// Акцентный цвет каждой планеты
 export const PLANET_COLORS: Record<string, string> = {
-  sun:         '#FFB300',
-  moon:        '#90A4AE',
-  mercury:     '#78909C',
-  venus:       '#EC407A',
-  mars:        '#EF5350',
-  jupiter:     '#7B1FA2',
-  saturn:      '#8D6E63',
-  uranus:      '#26C6DA',
-  neptune:     '#3F51B5',
-  pluto:       '#546E7A',
+  sun:       '#FFB300',
+  moon:      '#90A4AE',
+  mercury:   '#78909C',
+  venus:     '#EC407A',
+  mars:      '#EF5350',
+  jupiter:   '#7B1FA2',
+  saturn:    '#8D6E63',
+  uranus:    '#26C6DA',
+  neptune:   '#3F51B5',
+  pluto:     '#546E7A',
 };
 
-// ─── Вспомогательные функции ──────────────────────────────────────────────────
+// ─── Хелперы ─────────────────────────────────────────────────────────────────
 
-/** «1-й дом», «2-й дом», … «12-й дом» */
 export function houseLabel(house: number): string {
   return `${house}-й дом`;
 }
 
-/** «Солнце: Овен 15° (1-й дом)» — полная строка для accessibility */
 export function planetFullLabel(
   planet: string,
   sign: string,
@@ -102,14 +92,14 @@ export function planetFullLabel(
   house: number,
   retrograde: boolean,
 ): string {
-  const name   = PLANET_NAMES[planet]  ?? planet;
-  const sign_  = SIGN_NAMES[sign]      ?? sign;
-  const deg    = Math.floor(degree);
-  const retro  = retrograde ? ', ретроградный' : '';
+  const name  = PLANET_NAMES[planet] ?? planet;
+  const sign_ = SIGN_NAMES[sign]     ?? sign;
+  const deg   = Math.floor(degree);
+  const retro = retrograde ? ', ретроградный' : '';
   return `${name}: ${sign_} ${deg}° (${houseLabel(house)})${retro}`;
 }
 
-// ─── Компонент ────────────────────────────────────────────────────────────────
+// ─── Компонент ───────────────────────────────────────────────────────────────
 
 export const PlanetCard: React.FC<PlanetCardProps> = ({
   planet,
@@ -119,11 +109,10 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
   retrograde = false,
   style,
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark      = colorScheme === 'dark';
+  const { colors } = useTheme();
 
-  const symbol      = PLANET_SYMBOLS[planet]  ?? '★';
-  const planetName  = PLANET_NAMES[planet]    ?? planet;
+  const symbol      = PLANET_SYMBOLS[planet] ?? '★';
+  const planetName  = PLANET_NAMES[planet]   ?? planet;
   const signName    = SIGN_NAMES[sign]        ?? sign;
   const accentColor = PLANET_COLORS[planet]   ?? '#6200EE';
   const deg         = Math.floor(degree);
@@ -132,7 +121,10 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
     <View
       style={[
         styles.card,
-        isDark ? styles.cardDark : styles.cardLight,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorder,
+        },
         style,
       ]}
       testID="planet-card"
@@ -141,16 +133,8 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
       accessibilityLabel={planetFullLabel(planet, sign, degree, house, retrograde)}
     >
       {/* Символ планеты */}
-      <View
-        style={[
-          styles.symbolContainer,
-          { backgroundColor: accentColor + '22' },   // 13% opacity
-        ]}
-      >
-        <Text
-          style={[styles.symbol, { color: accentColor }]}
-          testID="planet-symbol"
-        >
+      <View style={[styles.symbolContainer, { backgroundColor: accentColor + '22' }]}>
+        <Text style={[styles.symbol, { color: accentColor }]} testID="planet-symbol">
           {symbol}
         </Text>
       </View>
@@ -160,10 +144,7 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
         {/* Строка 1: «Солнце  ℞» */}
         <View style={styles.titleRow}>
           <Text
-            style={[
-              styles.planetName,
-              isDark ? styles.textDark : styles.textLight,
-            ]}
+            style={[styles.planetName, { color: colors.text }]}
             testID="planet-name"
           >
             {planetName}
@@ -180,10 +161,7 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
 
         {/* Строка 2: «Овен 15°» */}
         <Text
-          style={[
-            styles.position,
-            isDark ? styles.subTextDark : styles.subTextLight,
-          ]}
+          style={[styles.position, { color: colors.textSecondary }]}
           testID="planet-position"
         >
           {`${signName} ${deg}°`}
@@ -191,10 +169,7 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
 
         {/* Строка 3: «1-й дом» */}
         <Text
-          style={[
-            styles.house,
-            isDark ? styles.houseTextDark : styles.houseTextLight,
-          ]}
+          style={[styles.house, { color: colors.textMuted }]}
           testID="planet-house"
         >
           {houseLabel(house)}
@@ -204,34 +179,22 @@ export const PlanetCard: React.FC<PlanetCardProps> = ({
   );
 };
 
-// ─── Стили ────────────────────────────────────────────────────────────────────
+// ─── Стили ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  // Карточка
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
-  cardLight: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8E8EE',
-  },
-  cardDark: {
-    backgroundColor: '#1E1E2E',
-    borderWidth: 1,
-    borderColor: '#2E2E3E',
-  },
-
-  // Символ
   symbolContainer: {
     width: 48,
     height: 48,
@@ -244,11 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
   },
-
-  // Информация
-  info: {
-    flex: 1,
-  },
+  info: { flex: 1 },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,14 +232,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
-
-  // Light theme
-  textLight:     { color: '#111827' },
-  subTextLight:  { color: '#374151' },
-  houseTextLight:{ color: '#9CA3AF' },
-
-  // Dark theme
-  textDark:      { color: '#F9FAFB' },
-  subTextDark:   { color: '#D1D5DB' },
-  houseTextDark: { color: '#6B7280' },
 });

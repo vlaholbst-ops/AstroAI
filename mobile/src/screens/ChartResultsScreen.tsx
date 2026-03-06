@@ -1,14 +1,14 @@
 // src/screens/ChartResultsScreen.tsx
-// Экран результатов натальной карты
-// Зависит от: TSK-63 (chartSlice selectors), TSK-61 (PlanetCard)
-import React, { useCallback } from 'react';
+// TSK-64: dark mode через useTheme() + fade-in анимация когда данные загружены.
+// Skeleton показывается пока loading=true, контент появляется с fade-in (350 мс).
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  useColorScheme,
+  Animated,
   Platform,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -20,44 +20,35 @@ import {
 } from '../store/slices/chartSlice';
 import { PlanetCard, SIGN_NAMES } from '../components/PlanetCard';
 import { SkeletonCard } from '../components/SkeletonCard';
+import { useTheme } from '../theme';
 import type { House, AngularPoint } from '../types/chart.types';
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 
-// Стандартный астрологический порядок планет
 const PLANET_ORDER = [
   'sun', 'moon', 'mercury', 'venus', 'mars',
   'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
 ];
 
-// ─── Вспомогательные функции ──────────────────────────────────────────────────
+// ─── Хелперы ──────────────────────────────────────────────────────────────────
 
-/**
- * Определяет номер дома (1-12) для планеты по её эклиптической долготе.
- * Сравнивает долготу планеты с куспидами домов.
- */
 function getPlanetHouse(planetLon: number, houses: House[]): number {
   if (!houses || houses.length < 2) return 1;
-
   const cusps = houses.map((h) => h.longitude);
 
   for (let i = 0; i < cusps.length; i++) {
     const start = cusps[i];
     const end   = cusps[(i + 1) % cusps.length];
-
     if (start <= end) {
-      // Обычный случай: нет перехода через 0°
       if (planetLon >= start && planetLon < end) return i + 1;
     } else {
-      // Переход через 0° (например, куспид 350° → следующий 10°)
       if (planetLon >= start || planetLon < end) return i + 1;
     }
   }
-
-  return 1; // fallback
+  return 1;
 }
 
-// ─── AngularCard (ASC / MC) ───────────────────────────────────────────────────
+// ─── AngularCard ──────────────────────────────────────────────────────────────
 
 interface AngularCardProps {
   label: string;
@@ -65,14 +56,15 @@ interface AngularCardProps {
   accentColor: string;
   point: AngularPoint;
   isDark: boolean;
+  cardBg: string;
+  cardBorder: string;
+  textColor: string;
+  subTextColor: string;
 }
 
 const AngularCard: React.FC<AngularCardProps> = ({
-  label,
-  symbol,
-  accentColor,
-  point,
-  isDark,
+  label, symbol, accentColor, point,
+  cardBg, cardBorder, textColor, subTextColor,
 }) => {
   const signName = SIGN_NAMES[point.zodiac_sign] ?? point.zodiac_sign;
   const deg      = Math.floor(point.degree);
@@ -81,40 +73,18 @@ const AngularCard: React.FC<AngularCardProps> = ({
     <View
       style={[
         styles.angularCard,
-        isDark ? styles.cardDark : styles.cardLight,
+        { backgroundColor: cardBg, borderColor: cardBorder },
       ]}
       accessible={true}
       accessibilityRole="text"
       accessibilityLabel={`${label}: ${signName} ${deg}°`}
     >
-      {/* Символ */}
-      <View
-        style={[
-          styles.angularSymbolContainer,
-          { backgroundColor: accentColor + '22' },
-        ]}
-      >
-        <Text style={[styles.angularSymbol, { color: accentColor }]}>
-          {symbol}
-        </Text>
+      <View style={[styles.symbolContainer, { backgroundColor: accentColor + '22' }]}>
+        <Text style={[styles.angularSymbol, { color: accentColor }]}>{symbol}</Text>
       </View>
-
-      {/* Текст */}
       <View style={styles.angularInfo}>
-        <Text
-          style={[
-            styles.angularLabel,
-            isDark ? styles.textDark : styles.textLight,
-          ]}
-        >
-          {label}
-        </Text>
-        <Text
-          style={[
-            styles.angularPosition,
-            isDark ? styles.subTextDark : styles.subTextLight,
-          ]}
-        >
+        <Text style={[styles.angularLabel, { color: textColor }]}>{label}</Text>
+        <Text style={[styles.angularPosition, { color: subTextColor }]}>
           {signName} {deg}°
         </Text>
       </View>
@@ -125,57 +95,55 @@ const AngularCard: React.FC<AngularCardProps> = ({
 // ─── ChartResultsScreen ───────────────────────────────────────────────────────
 
 export const ChartResultsScreen: React.FC = () => {
-  const dispatch    = useAppDispatch();
-  const colorScheme = useColorScheme();
-  const isDark      = colorScheme === 'dark';
+  const dispatch           = useAppDispatch();
+  const { colors, isDark } = useTheme();
 
   const chartData = useAppSelector(selectChartData);
   const loading   = useAppSelector(selectChartLoading);
   const error     = useAppSelector(selectChartError);
 
+  // ── Fade-in: контент появляется плавно когда данные приходят ──────────────
+  // TSK-64: "анимация fade-in при загрузке данных"
+  const contentFadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (chartData) {
+      // Данные загружены — плавно показываем контент
+      Animated.timing(contentFadeAnim, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // Данные сброшены (clearChart) — сразу скрываем, скелетон покажется
+      contentFadeAnim.setValue(0);
+    }
+  }, [chartData, contentFadeAnim]);
+
   const handleBack = useCallback(() => {
     dispatch(clearChart());
   }, [dispatch]);
 
-  // Цветовая схема экрана
-  const screenBg   = isDark ? '#0F0F1A' : '#F3F4F6';
-  const headerBg   = isDark ? '#1E1E2E' : '#FFFFFF';
-  const headerBorder = isDark ? '#2E2E3E' : '#E8E8EE';
-
-  // ── Состояние ошибки ─────────────────────────────────────────────────────
+  // ── Состояние ошибки ──────────────────────────────────────────────────────
 
   if (error && !loading && !chartData) {
     return (
-      <View style={[styles.container, { backgroundColor: screenBg }]}>
-        {/* Header */}
-        <View
-          style={[
-            styles.header,
-            { backgroundColor: headerBg, borderBottomColor: headerBorder },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={handleBack}
-            style={styles.backButton}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.backText, isDark ? styles.textDark : styles.textLight]}>
-              ← Назад
-            </Text>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+        <View style={[
+          styles.header,
+          { backgroundColor: colors.header, borderBottomColor: colors.headerBorder },
+        ]}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
+            <Text style={[styles.backText, { color: colors.text }]}>← Назад</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>
-            Натальная карта
-          </Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Натальная карта</Text>
           <View style={styles.headerRight} />
         </View>
 
-        {/* Error */}
         <View style={styles.centerContent}>
           <Text style={styles.errorIcon}>❌</Text>
-          <Text style={[styles.errorTitle, isDark ? styles.textDark : styles.textLight]}>
-            Ошибка расчёта
-          </Text>
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Ошибка расчёта</Text>
+          <Text style={[styles.errorText, { color: colors.textMuted }]}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleBack}>
             <Text style={styles.retryText}>← Вернуться к форме</Text>
           </TouchableOpacity>
@@ -184,17 +152,16 @@ export const ChartResultsScreen: React.FC = () => {
     );
   }
 
-  // ── Основной рендер ──────────────────────────────────────────────────────
+  // ── Основной рендер ───────────────────────────────────────────────────────
 
   return (
-    <View style={[styles.container, { backgroundColor: screenBg }]}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+
       {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { backgroundColor: headerBg, borderBottomColor: headerBorder },
-        ]}
-      >
+      <View style={[
+        styles.header,
+        { backgroundColor: colors.header, borderBottomColor: colors.headerBorder },
+      ]}>
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backButton}
@@ -202,16 +169,13 @@ export const ChartResultsScreen: React.FC = () => {
           accessibilityRole="button"
           accessibilityLabel="Назад к форме"
         >
-          <Text style={[styles.backText, isDark ? styles.textDark : styles.textLight]}>
-            ← Назад
-          </Text>
+          <Text style={[styles.backText, { color: colors.text }]}>← Назад</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
           Натальная карта
         </Text>
 
-        {/* Правый placeholder для центровки заголовка */}
         <View style={styles.headerRight} />
       </View>
 
@@ -220,71 +184,63 @@ export const ChartResultsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── Секция: Планеты ─────────────────────────────────────────────── */}
-        <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>
-          Планеты
-        </Text>
+        {/* ── Секция: Планеты ───────────────────────────────────────────── */}
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Планеты</Text>
 
-        {/* Skeleton loader — 10 заглушек пока loading=true и данных нет */}
+        {/* Skeleton — 10 заглушек пока loading=true */}
         {loading && !chartData &&
           Array.from({ length: 10 }).map((_, i) => (
-            <SkeletonCard key={`skel-planet-${i}`} isDark={isDark} />
+            <SkeletonCard key={`skel-planet-${i}`} />
           ))
         }
 
-        {/* Реальные данные — список планет через .map() */}
-        {/* Правило CLAUDE.md: FlatList внутри ScrollView → использовать .map() */}
-        {chartData &&
-          PLANET_ORDER.map((key) => {
-            const planet = chartData.planets[key];
-            if (!planet) return null;
+        {/* Контент планет с fade-in. FlatList внутри ScrollView → .map() (CLAUDE.md) */}
+        {chartData && (
+          <Animated.View style={{ opacity: contentFadeAnim }}>
+            {PLANET_ORDER.map((key) => {
+              const planet = chartData.planets[key];
+              if (!planet) return null;
+              const house = getPlanetHouse(planet.longitude, chartData.houses.houses);
+              return (
+                <PlanetCard
+                  key={key}
+                  planet={key}
+                  sign={planet.zodiac_sign}
+                  degree={planet.degree}
+                  house={house}
+                  retrograde={planet.retrograde}
+                />
+              );
+            })}
+          </Animated.View>
+        )}
 
-            const house = getPlanetHouse(
-              planet.longitude,
-              chartData.houses.houses,
-            );
-
-            return (
-              <PlanetCard
-                key={key}
-                planet={key}
-                sign={planet.zodiac_sign}
-                degree={planet.degree}
-                house={house}
-                retrograde={planet.retrograde}
-              />
-            );
-          })
-        }
-
-        {/* ── Секция: Угловые точки (ASC / MC) ────────────────────────────── */}
-        <Text
-          style={[
-            styles.sectionTitle,
-            styles.sectionTitleSpaced,
-            isDark ? styles.textDark : styles.textLight,
-          ]}
-        >
+        {/* ── Секция: Угловые точки (ASC / MC) ─────────────────────────── */}
+        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced, { color: colors.textMuted }]}>
           Угловые точки
         </Text>
 
         {/* Skeleton для ASC/MC */}
         {loading && !chartData && (
           <>
-            <SkeletonCard key="skel-asc" isDark={isDark} />
-            <SkeletonCard key="skel-mc"  isDark={isDark} />
+            <SkeletonCard key="skel-asc" />
+            <SkeletonCard key="skel-mc"  />
           </>
         )}
 
-        {/* ASC и MC */}
+        {/* ASC и MC с fade-in */}
         {chartData && (
-          <>
+          <Animated.View style={{ opacity: contentFadeAnim }}>
             <AngularCard
               label="Асцендент (ASC)"
               symbol="↑"
               accentColor="#6200EE"
               point={chartData.houses.ascendant}
               isDark={isDark}
+              cardBg={colors.card}
+              cardBorder={colors.cardBorder}
+              textColor={colors.text}
+              subTextColor={colors.textSecondary}
             />
             <AngularCard
               label="Середина Неба (MC)"
@@ -292,21 +248,28 @@ export const ChartResultsScreen: React.FC = () => {
               accentColor="#0277BD"
               point={chartData.houses.mc}
               isDark={isDark}
+              cardBg={colors.card}
+              cardBorder={colors.cardBorder}
+              textColor={colors.text}
+              subTextColor={colors.textSecondary}
             />
-          </>
+          </Animated.View>
         )}
 
-        {/* ── Debug: счётчик аспектов ──────────────────────────────────────── */}
+        {/* Debug-баннер */}
         {__DEV__ && chartData && (
-          <View style={[styles.debugBanner, isDark ? styles.debugDark : styles.debugLight]}>
-            <Text style={styles.debugText}>
-              🪐 Планет: {Object.keys(chartData.planets).length}
-              {'  '}
-              🔗 Аспектов: {chartData.aspects?.length ?? 0}
-              {'  '}
-              🏠 Домов: {chartData.houses.houses.length}
+          <Animated.View
+            style={[
+              styles.debugBanner,
+              { backgroundColor: colors.debugBg, opacity: contentFadeAnim },
+            ]}
+          >
+            <Text style={[styles.debugText, { color: colors.textMuted }]}>
+              {'🪐 Планет: ' + Object.keys(chartData.planets).length +
+               '  🔗 Аспектов: ' + (chartData.aspects?.length ?? 0) +
+               '  🏠 Домов: ' + chartData.houses.houses.length}
             </Text>
-          </View>
+          </Animated.View>
         )}
 
       </ScrollView>
@@ -317,11 +280,8 @@ export const ChartResultsScreen: React.FC = () => {
 // ─── Стили ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
 
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -346,17 +306,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
-  headerRight: {
-    minWidth: 72,  // симметрично backButton
-  },
+  headerRight: { minWidth: 72 },
 
-  // ScrollView
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
 
-  // Section headers
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
@@ -365,9 +321,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 4,
   },
-  sectionTitleSpaced: {
-    marginTop: 20,
-  },
+  sectionTitleSpaced: { marginTop: 20 },
 
   // AngularCard
   angularCard: {
@@ -383,7 +337,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  angularSymbolContainer: {
+  symbolContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -396,17 +350,13 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '700',
   },
-  angularInfo: {
-    flex: 1,
-  },
+  angularInfo: { flex: 1 },
   angularLabel: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 3,
   },
-  angularPosition: {
-    fontSize: 14,
-  },
+  angularPosition: { fontSize: 14 },
 
   // Error state
   centerContent: {
@@ -415,10 +365,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 32,
   },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
+  errorIcon: { fontSize: 48, marginBottom: 16 },
   errorTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -427,7 +374,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
@@ -450,28 +396,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
   },
-  debugLight: { backgroundColor: '#F0F0F0' },
-  debugDark:  { backgroundColor: '#1A1A2E' },
   debugText: {
     fontSize: 11,
-    color: '#9CA3AF',
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
-
-  // Card themes (shared for AngularCard)
-  cardLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E8E8EE',
-  },
-  cardDark: {
-    backgroundColor: '#1E1E2E',
-    borderColor: '#2E2E3E',
-  },
-
-  // Text themes
-  textLight:    { color: '#111827' },
-  textDark:     { color: '#F9FAFB' },
-  subTextLight: { color: '#374151' },
-  subTextDark:  { color: '#D1D5DB' },
 });
