@@ -24,3 +24,7 @@ export const NOMINATIM_CONFIG = {
   BASE_URL: 'https://nominatim.openstreetmap.org',
   USER_AGENT: 'AstroAI/1.0', // ОБЯЗАТЕЛЬНО для Nominatim
 };
+
+export const STORAGE_KEYS = {
+  LAST_INPUT: '@astroai:last_input',
+};

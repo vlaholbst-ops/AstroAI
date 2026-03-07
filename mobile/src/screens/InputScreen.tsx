@@ -1,7 +1,7 @@
 // src/screens/InputScreen.tsx
 // TSK-64: dark mode через useTheme(). Палитра: light #FFFFFF/#000000, dark #1A1A1A/#FFFFFF.
 // TSK-68: React Navigation — navigation prop, navigate('ChartResults') после dispatch.
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -16,10 +16,12 @@ import {
   setLocation,
   setErrors,
   selectFormData,
+  restoreFromStorage,
 } from '../store/slices/formSlice';
 import { calculateChart, selectChartLoading } from '../store/slices/chartSlice';
 import { BirthDatePicker } from '../components/BirthDatePicker';
 import { LocationAutocomplete } from '../components/LocationAutocomplete';
+import { loadLastInput } from '../services/storageService';
 import { SubmitButton } from '../components/SubmitButton';
 import { useTheme } from '../theme';
 import type { InputScreenNavigationProp } from '../navigation/types';
@@ -28,6 +30,13 @@ type Props = { navigation: InputScreenNavigationProp };
 
 export const InputScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch           = useAppDispatch();
+
+  // TSK-71: предзаполнение формы из AsyncStorage при монтировании
+  useEffect(() => {
+    loadLastInput()
+      .then(saved => { if (saved) dispatch(restoreFromStorage(saved)); })
+      .catch(() => {}); // silent fail — не ломаем UX
+  }, [dispatch]);
   const { colors, isDark } = useTheme();
 
   const formState    = useAppSelector((state) => state.form);

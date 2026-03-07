@@ -2,6 +2,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import type { FormState, BirthData } from '../../types/chart.types';
+import type { StoredInput } from '../../services/storageService';
 import type { RootState } from '../store';
 
 const initialState: FormState = {
@@ -44,10 +45,21 @@ const formSlice = createSlice({
     resetForm(state) {
       return initialState;
     },
+
+    // TSK-71: восстановить форму из AsyncStorage
+    restoreFromStorage(state, action: PayloadAction<StoredInput>) {
+      // birth_date_local — строка без Z → new Date() парсит как локальное время ✓
+      state.birth_date = new Date(action.payload.birth_date_local);
+      state.location   = action.payload.location;
+      state.latitude   = action.payload.latitude;
+      state.longitude  = action.payload.longitude;
+      state.timezone   = action.payload.timezone;
+      state.errors     = {};
+    },
   },
 });
 
-export const { setBirthDate, setLocation, setErrors, resetForm } = formSlice.actions;
+export const { setBirthDate, setLocation, setErrors, resetForm, restoreFromStorage } = formSlice.actions;
 
 // Selector для получения валидных данных с timezone конвертацией
 export const selectFormData = (state: RootState): BirthData | null => {
