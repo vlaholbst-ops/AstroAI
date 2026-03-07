@@ -1,6 +1,7 @@
 // src/screens/ChartResultsScreen.tsx
 // TSK-64: dark mode через useTheme() + fade-in анимация когда данные загружены.
 // TSK-68: React Navigation — navigation prop, useFocusEffect для очистки Redux при уходе.
+// TSK-70: ActivityIndicator при загрузке, классификация ошибок, кнопка «Попробовать снова».
 // Skeleton показывается пока loading=true, контент появляется с fade-in (350 мс).
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
@@ -11,15 +12,18 @@ import {
   StyleSheet,
   Animated,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   clearChart,
+  calculateChart,
   selectChartData,
   selectChartLoading,
   selectChartError,
 } from '../store/slices/chartSlice';
+import { selectFormData } from '../store/slices/formSlice';
 import { PlanetCard, SIGN_NAMES } from '../components/PlanetCard';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { useTheme } from '../theme';
@@ -49,6 +53,18 @@ function getPlanetHouse(planetLon: number, houses: House[]): number {
     }
   }
   return 1;
+}
+
+// ─── TSK-70: Классификация ошибок для UI ──────────────────────────────────────
+
+function getErrorMeta(msg: string | null): { icon: string; title: string } {
+  if (msg === 'Проверьте интернет-соединение') {
+    return { icon: '📡', title: 'Нет соединения' };
+  }
+  if (msg === 'Неверные данные') {
+    return { icon: '⚠️', title: 'Неверные данные' };
+  }
+  return { icon: '🔧', title: 'Ошибка сервера' };
 }
 
 // ─── AngularCard ──────────────────────────────────────────────────────────────
@@ -106,6 +122,7 @@ export const ChartResultsScreen: React.FC<Props> = ({ navigation }) => {
   const chartData = useAppSelector(selectChartData);
   const loading   = useAppSelector(selectChartLoading);
   const error     = useAppSelector(selectChartError);
+  const formData  = useAppSelector(selectFormData);
 
   // ── Fade-in: контент появляется плавно когда данные приходят ──────────────
   const contentFadeAnim = useRef(new Animated.Value(0)).current;
@@ -136,9 +153,17 @@ export const ChartResultsScreen: React.FC<Props> = ({ navigation }) => {
     navigation.goBack();
   }, [navigation]);
 
+  // ── TSK-70: «Попробовать снова» — перезапускает расчёт без возврата к форме
+  const handleRetry = useCallback(() => {
+    if (formData) {
+      dispatch(calculateChart(formData));
+    }
+  }, [dispatch, formData]);
+
   // ── Состояние ошибки ──────────────────────────────────────────────────────
 
   if (error && !loading && !chartData) {
+    const { icon, title } = getErrorMeta(error);
     return (
       <View style={[styles.container, { backgroundColor: colors.surface }]}>
         <View style={[
@@ -153,11 +178,28 @@ export const ChartResultsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.centerContent}>
-          <Text style={styles.errorIcon}>❌</Text>
-          <Text style={[styles.errorTitle, { color: colors.text }]}>Ошибка расчёта</Text>
+          <Text style={styles.errorIcon}>{icon}</Text>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>{title}</Text>
           <Text style={[styles.errorText, { color: colors.textMuted }]}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleBack}>
-            <Text style={styles.retryText}>← Вернуться к форме</Text>
+
+          {/* Попробовать снова — перезапускает запрос (TSK-70) */}
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={handleRetry}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryText}>Попробовать снова</Text>
+          </TouchableOpacity>
+
+          {/* Вернуться к форме — ghost кнопка */}
+          <TouchableOpacity
+            style={[styles.backButtonOutline, { borderColor: colors.textMuted }]}
+            onPress={handleBack}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.backButtonOutlineText, { color: colors.textMuted }]}>
+              ← Вернуться к форме
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -195,6 +237,16 @@ export const ChartResultsScreen: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
+        {/* ── TSK-70: Loading indicator — ActivityIndicator + текст ─────── */}
+        {loading && !chartData && (
+          <View style={styles.loadingHeader}>
+            <ActivityIndicator size="small" color="#6200EE" />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+              Рассчитываем карту...
+            </Text>
+          </View>
+        )}
 
         {/* ── Секция: Планеты ───────────────────────────────────────────── */}
         <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Планеты</Text>
@@ -325,6 +377,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
+  // TSK-70: Loading indicator
+  loadingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
@@ -395,11 +460,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
+    marginBottom: 12,
+    minWidth: 200,
+    alignItems: 'center',
   },
   retryText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  // TSK-70: ghost кнопка «Вернуться к форме»
+  backButtonOutline: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: 200,
+    alignItems: 'center',
+  },
+  backButtonOutlineText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 
   // Debug
