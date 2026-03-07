@@ -14,8 +14,8 @@ import swisseph as swe
 # Константы
 EPHEMERIS_DIR = Path(__file__).resolve().parent.parent.parent / "ephemeris"
 ZODIAC_SIGNS = [
-    "Овен", "Телец", "Близнецы", "Рак", "Лев", "Дева",
-    "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"
+    'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
+    'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
 ]
 
 # Инициализация Skyfield Loader

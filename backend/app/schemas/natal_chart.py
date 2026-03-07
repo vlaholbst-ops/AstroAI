@@ -69,7 +69,7 @@ class NatalChartResponse(BaseModel):
                 "planets": {
                     "sun": {
                         "planet": "Sun",
-                        "zodiac_sign": "Козерог",
+                        "zodiac_sign": "capricorn",
                         "degree": 10.38,
                         "longitude": 280.38,
                         "retrograde": False
@@ -77,19 +77,19 @@ class NatalChartResponse(BaseModel):
                 },
                 "houses": {
                     "ascendant": {
-                        "zodiac_sign": "Близнецы",
+                        "zodiac_sign": "gemini",
                         "degree": 27.79,
                         "longitude": 87.79
                     },
                     "mc": {
-                        "zodiac_sign": "Водолей",
+                        "zodiac_sign": "aquarius",
                         "degree": 15.61,
                         "longitude": 315.61
                     },
                     "houses": [
                         {
                             "house": 1,
-                            "zodiac_sign": "Близнецы",
+                            "zodiac_sign": "gemini",
                             "degree": 27.79,
                             "longitude": 87.79
                         }
