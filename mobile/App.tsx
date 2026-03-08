@@ -1,7 +1,7 @@
 // App.tsx
 // TSK-68: React Navigation — заменяет условный Redux-рендеринг.
 import React from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import store from './src/store/store';
@@ -16,8 +16,8 @@ const Root: React.FC = () => {
     <NavigationContainer>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor="transparent"
-        translucent={false}
+        backgroundColor={Platform.OS === 'android' ? 'transparent' : undefined}
+        translucent={Platform.OS === 'android' ? false : undefined}
       />
       <AppNavigator />
     </NavigationContainer>
