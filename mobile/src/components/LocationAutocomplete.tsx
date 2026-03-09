@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import debounce from 'lodash.debounce';
 import { searchLocation, formatLocationName } from '../services/nominatimApi';
+import { getTimezoneByCoords } from '../services/timezoneService';
 import { useTheme } from '../theme';
 import type { NominatimResult } from '../types/chart.types';
 
 interface LocationAutocompleteProps {
   value: string;
-  onSelect: (location: string, latitude: number, longitude: number) => void;
+  // timezone добавлен 4-м аргументом — всегда IANA string (например "Europe/Moscow")
+  onSelect: (location: string, latitude: number, longitude: number, timezone: string) => void;
   error?: string;
 }
 
@@ -29,6 +31,7 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tzLoading, setTzLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   // Debounced поиск (500ms задержка)
@@ -60,15 +63,24 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     debouncedSearch(text);
   };
 
-  const handleSelectLocation = (result: NominatimResult) => {
+  const handleSelectLocation = async (result: NominatimResult) => {
     const formattedName = formatLocationName(result);
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+
+    // Закрываем список и показываем название сразу
     setQuery(formattedName);
     setShowResults(false);
-    onSelect(
-      formattedName,
-      parseFloat(result.lat),
-      parseFloat(result.lon)
-    );
+    setResults([]);
+
+    // Определяем timezone по координатам (быстро: ~100-300ms, есть fallback)
+    setTzLoading(true);
+    try {
+      const timezone = await getTimezoneByCoords(lat, lon);
+      onSelect(formattedName, lat, lon, timezone);
+    } finally {
+      setTzLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -76,6 +88,8 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       debouncedSearch.cancel();
     };
   }, [debouncedSearch]);
+
+  const isLoading = loading || tzLoading;
 
   return (
     <View style={styles.container}>
@@ -102,7 +116,7 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {loading && (
+      {isLoading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#6200EE" />
         </View>

@@ -117,8 +117,8 @@ export const InputScreen: React.FC<Props> = ({ navigation }) => {
 
           <LocationAutocomplete
             value={formState.location}
-            onSelect={(location, latitude, longitude) => {
-              dispatch(setLocation({ location, latitude, longitude }));
+            onSelect={(location, latitude, longitude, timezone) => {
+              dispatch(setLocation({ location, latitude, longitude, timezone }));
             }}
             error={formState.errors.location}
           />
